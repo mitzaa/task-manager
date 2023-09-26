@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  frontend:
+    image: task-management-frontend
+    ports:
+      - "3000:3000"
+  backend:
+    image: task-management-backend
+    ports:
+      - "3001:3001"
+
