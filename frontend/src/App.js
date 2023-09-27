@@ -7,7 +7,30 @@ function App() {
 
   const addTask = () => {
     if (newTask.trim() !== '') {
-      setTasks(prevTasks => [...prevTasks, { id: Date.now(), title: newTask, completed: false }]);
+      const task = {
+        taskID: Date.now().toString(),
+        taskName: newTask,
+        taskDescription: '', 
+        status: 'Pending'
+      };
+    
+      fetch('http://localhost:3001/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(task)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          setTasks(prevTasks => [...prevTasks, task]);
+        } else {
+          console.error('Failed to add task:', data.error);
+        }
+      })
+      .catch(error => {
+        console.error('Error adding task:', error);
+      });
+
       setNewTask('');
     }
   };
@@ -18,12 +41,17 @@ function App() {
 
   const toggleTaskCompletion = (taskId) => {
     setTasks(prevTasks => prevTasks.map(task => {
-      if (task.id === taskId) {
-        return {...task, completed: !task.completed}; 
+      if (task.taskID === taskId) {
+        return {
+          ...task,
+          status: task.status === 'Pending' ? 'Completed' : 'Pending'
+        };
       }
       return task;
     }));
   };
+
+
 
   return (
     <div className="App">
@@ -38,15 +66,15 @@ function App() {
         <button onClick={addTask}>Add Task</button>
       </div>
       <ul>
-        {tasks.sort((a, b) => a.completed - b.completed).map(task => (
-          <li key={task.id} className={task.completed ? 'completed-task' : ''}>
+        {tasks.map(task => (
+          <li key={task.taskID} className={task.status ? 'completed-task' : ''}>
             <input 
               type="checkbox"
-              checked={task.completed}
-              onChange={() => toggleTaskCompletion(task.id)}
+              checked={task.status}
+              onChange={() => toggleTaskCompletion(task.taskID)} // This function needs to be defined
             />
-            {task.title}
-            <button onClick={() => removeTask(task.id)}>Delete</button>
+            {task.taskName}
+            <button onClick={() => removeTask(task.taskID)}>Delete</button> {/* This function needs to be defined */}
           </li>
         ))}
       </ul>
