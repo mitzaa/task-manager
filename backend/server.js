@@ -1,23 +1,29 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const AWS = require('aws-sdk');
-
 const app = express();
+const cors = require('cors');
+
+app.use(cors({ origin: 'http://localhost:3000' })); 
+
+
 
 // Middleware to parse JSON requests
 app.use(bodyParser.json());
 
 // Configure AWS SDK
 AWS.config.update({
-  region: 'us-east-1',
-});
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    region: 'us-east-1' 
+  });
 
 // Create a DynamoDB DocumentClient instance
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
 // Define a route handler for the root URL ("/")
 app.get('/', (req, res) => {
-  res.send('Hello, Task Manager Backend'); // Replace with your desired response
+  res.send('Hello, Task Manager Backend'); 
 });
 
 // Add a task
@@ -128,7 +134,9 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = 3001;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+const HOST = '0.0.0.0'
+
+app.listen(PORT, HOST, () => {
+    console.log(`Server is running on http://${HOST}:${PORT}`);
 });
 
