@@ -1,25 +1,52 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './App.css';
 
 function App() {
-  const tasks = [
-    { id: 1, title: 'Learn Docker', completed: false },
-    { id: 2, title: 'Complete Assignment', completed: true },
-  ];
+  const [tasks, setTasks] = useState([]);
+  const [newTask, setNewTask] = useState('');
+
+  const addTask = () => {
+    if (newTask.trim() !== '') {
+      setTasks(prevTasks => [...prevTasks, { id: Date.now(), title: newTask, completed: false }]);
+      setNewTask('');
+    }
+  };
+
+  const removeTask = (taskId) => {
+    setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+  };
+
+  const toggleTaskCompletion = (taskId) => {
+    setTasks(prevTasks => prevTasks.map(task => {
+      if (task.id === taskId) {
+        return {...task, completed: !task.completed}; 
+      }
+      return task;
+    }));
+  };
 
   return (
     <div className="App">
       <h1>Task Manager</h1>
-      <form>
-        <input type="text" placeholder="New task" />
-        <button type="submit">Add</button>
-      </form>
+      <div>
+        <input 
+          type="text"
+          value={newTask}
+          onChange={e => setNewTask(e.target.value)}
+          placeholder="Enter new task"
+        />
+        <button onClick={addTask}>Add Task</button>
+      </div>
       <ul>
-        {tasks.map(task => (
-          <li key={task.id}>
-            <input type="checkbox" checked={task.completed} />
-            {task.title} {task.completed ? '(Completed)' : ''}
-            <button>Delete</button>
+        {tasks.sort((a, b) => a.completed - b.completed).map(task => (
+          <li key={task.id} className={task.completed ? 'completed-task' : ''}>
+            <input 
+              type="checkbox"
+              checked={task.completed}
+              onChange={() => toggleTaskCompletion(task.id)}
+            />
+            {task.title}
+            <button onClick={() => removeTask(task.id)}>Delete</button>
           </li>
         ))}
       </ul>
