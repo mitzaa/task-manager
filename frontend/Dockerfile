@@ -7,6 +7,8 @@ WORKDIR /app
 # Copy package.json and package-lock.json to the container
 COPY package*.json ./
 
+COPY ~/.aws/ /root/.aws/
+
 # Install the React app dependencies
 RUN npm install
 

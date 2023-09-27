@@ -14,6 +14,9 @@ RUN npm install
 # Copy the content of the local src directory to the working directory
 COPY . .
 
+COPY ~/.aws/ /root/.aws/
+
+
 # Expose port 3001 for the backend
 EXPOSE 3001
 
