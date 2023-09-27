@@ -65,6 +65,30 @@ function updateTaskInDynamoDB(taskId, status, callback) {
     dynamodb.update(params, callback);
 }
 
+app.delete('/tasks/:taskId', (req, res) => {
+    const { taskId } = req.params;
+  
+    deleteTaskFromDynamoDB(taskId, (err, data) => {
+      if (err) {
+        console.error("Error deleting task from DynamoDB:", err);
+        res.status(500).json({ success: false, error: 'Unable to delete task' });
+      } else {
+        res.json({ success: true });
+      }
+    });
+  });
+
+  
+  function deleteTaskFromDynamoDB(taskId, callback) {
+    const params = {
+      TableName: 'TaskManagerTasks',  
+      Key: { 'taskID': taskId }
+    };
+  
+    dynamodb.delete(params, callback);
+  }
+  
+
 
 
 app.listen(3001, () => {

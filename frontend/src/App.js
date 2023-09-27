@@ -65,6 +65,24 @@ function App() {
     });
   };
 
+  const deleteTask = (taskId) => {
+    fetch(`http://localhost:3001/tasks/${taskId}`, {
+      method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Update the local state to reflect the deletion
+        setTasks(prevTasks => prevTasks.filter(task => task.taskID !== taskId));
+      } else {
+        console.error("Error deleting task:", data.error);
+      }
+    })
+    .catch(error => {
+      console.error("Fetch error:", error.message);
+    });
+  };
+  
 
 
   return (
@@ -88,7 +106,7 @@ function App() {
               onChange={() => toggleTaskCompletion(task.taskID)}
             />
             {task.taskName}
-            <button onClick={() => removeTask(task.taskID)}>Delete</button> {/* This function needs to be defined */}
+            <button onClick={() => deleteTask(task.taskID)}>Delete</button>
           </li>
         ))}
       </ul>
