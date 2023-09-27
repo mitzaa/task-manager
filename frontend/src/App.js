@@ -10,26 +10,26 @@ function App() {
       const task = {
         taskID: Date.now().toString(),
         taskName: newTask,
-        taskDescription: '', 
+        taskDescription: '',
         status: 'Pending'
       };
-    
+
       fetch('http://localhost:3001/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(task)
       })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          setTasks(prevTasks => [...prevTasks, task]);
-        } else {
-          console.error('Failed to add task:', data.error);
-        }
-      })
-      .catch(error => {
-        console.error('Error adding task:', error);
-      });
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            setTasks(prevTasks => [...prevTasks, task]);
+          } else {
+            console.error('Failed to add task:', data.error);
+          }
+        })
+        .catch(error => {
+          console.error('Error adding task:', error);
+        });
 
       setNewTask('');
     }
@@ -40,15 +40,29 @@ function App() {
   };
 
   const toggleTaskCompletion = (taskId) => {
-    setTasks(prevTasks => prevTasks.map(task => {
-      if (task.taskID === taskId) {
-        return {
-          ...task,
-          status: task.status === 'Pending' ? 'Completed' : 'Pending'
-        };
+    const taskToUpdate = tasks.find(task => task.taskID === taskId);
+    if (!taskToUpdate) return;
+  
+    const updatedStatus = taskToUpdate.status === 'Pending' ? 'Completed' : 'Pending';
+  
+    fetch(`http://localhost:3001/tasks/${taskId}`, { 
+      method: 'PATCH', 
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status: updatedStatus })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        setTasks(prevTasks => prevTasks.map(task => {
+          if (task.taskID === taskId) {
+            return { ...task, status: updatedStatus };
+          }
+          return task;
+        }));
       }
-      return task;
-    }));
+    });
   };
 
 
@@ -57,7 +71,7 @@ function App() {
     <div className="App">
       <h1>Task Manager</h1>
       <div>
-        <input 
+        <input
           type="text"
           value={newTask}
           onChange={e => setNewTask(e.target.value)}
@@ -67,11 +81,11 @@ function App() {
       </div>
       <ul>
         {tasks.map(task => (
-          <li key={task.taskID} className={task.status ? 'completed-task' : ''}>
-            <input 
+          <li key={task.taskID} style={{ textDecoration: task.status === 'Completed' ? 'line-through' : 'none' }}>
+            <input
               type="checkbox"
-              checked={task.status}
-              onChange={() => toggleTaskCompletion(task.taskID)} // This function needs to be defined
+              checked={task.status === 'Completed'}
+              onChange={() => toggleTaskCompletion(task.taskID)}
             />
             {task.taskName}
             <button onClick={() => removeTask(task.taskID)}>Delete</button> {/* This function needs to be defined */}

@@ -9,37 +9,65 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Initialize AWS SDK and DynamoDB
-AWS.config.update({ region: 'us-east-1' }); 
+AWS.config.update({ region: 'us-east-1' });
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 
 
 // Add a new task
 app.post('/tasks', (req, res) => {
-  const { taskID, taskName, taskDescription, status } = req.body;
-  console.log("Received request to add task:", req.body);
-  
-  const params = {
-    TableName: 'TaskManagerTasks', 
-    Item: {
-      taskID,
-      taskName,
-      taskDescription,
-      status
-    }
-  };
+    const { taskID, taskName, taskDescription, status } = req.body;
+    console.log("Received request to add task:", req.body);
 
-  dynamodb.put(params, (err, data) => {
-    if (err) {
-      console.error("Error adding task to DynamoDB:", err);
-      res.status(500).json({ error: 'Unable to add task', details: err });
-    } else {
-      res.json({ success: true, message: 'Task added successfully' });
-    }
-  });
+    const params = {
+        TableName: 'TaskManagerTasks',
+        Item: {
+            taskID,
+            taskName,
+            taskDescription,
+            status
+        }
+    };
+
+    dynamodb.put(params, (err, data) => {
+        if (err) {
+            console.error("Error adding task to DynamoDB:", err);
+            res.status(500).json({ error: 'Unable to add task', details: err });
+        } else {
+            res.json({ success: true, message: 'Task added successfully' });
+        }
+    });
+});
+
+app.patch('/tasks/:taskId', (req, res) => {
+    const { taskId } = req.params;
+    const { status } = req.body;
+
+    updateTaskInDynamoDB(taskId, status, (err, data) => {
+        if (err) {
+            console.error("Error updating task in DynamoDB:", err);
+            res.status(500).json({ success: false, error: 'Unable to update task' });
+        } else {
+            res.json({ success: true });
+        }
+    });
 });
 
 
+function updateTaskInDynamoDB(taskId, status, callback) {
+    const params = {
+        TableName: 'TaskManagerTasks',  
+        Key: { 'taskID': taskId },
+        UpdateExpression: 'set #s = :status',
+        ExpressionAttributeNames: { '#s': 'status' },
+        ExpressionAttributeValues: { ':status': status }
+    };
+
+    dynamodb.update(params, callback);
+}
+
+
+
 app.listen(3001, () => {
-  console.log('Server running on http://localhost:3001');
+    console.log('Server running on http://localhost:3001');
 });
 
