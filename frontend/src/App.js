@@ -14,7 +14,7 @@ function App() {
           mode: 'cors',
           headers: { 'Content-Type': 'application/json' }
         });
-        
+
         const data = await response.json();
         setTasks(data);
       } catch (error) {
@@ -63,30 +63,53 @@ function App() {
 
     const updatedStatus = taskToUpdate.status === 'Pending' ? 'Completed' : 'Pending';
 
-    fetch(`https://u5iwo7ria4.execute-api.us-east-1.amazonaws.com/version2/task/${taskID}`, {
-      method: 'PUT',
-      mode: 'cors',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ status: updatedStatus })
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          setTasks(prevTasks => {
-            console.log("Updating task status in state for taskID:", taskID);
-            return prevTasks.map(task => {
-              if (task.taskID === taskID) {
-                console.log("Found matching task. Setting status to:", updatedStatus);
+    
+    setTasks(prevTasks => {
+        return prevTasks.map(task => {
+            if (task.taskID === taskID) {
                 return { ...task, status: updatedStatus };
-              }
-              return task;
+            }
+            return task;
+        });
+    });
+
+    fetch(`https://u5iwo7ria4.execute-api.us-east-1.amazonaws.com/version2/task/${taskID}`, {
+        method: 'PUT',
+        mode: 'cors',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: updatedStatus })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.message !== 'Item updated successfully') {
+        console.error("API update failed with response:", data, ". Reverting task status in the UI.");
+            setTasks(prevTasks => {
+                return prevTasks.map(task => {
+                    if (task.taskID === taskID) {
+                        return { ...task, status: taskToUpdate.status }; // Revert to the original status
+                    }
+                    return task;
+                });
             });
-          });
         }
-      });
+    })
+    .catch(error => {
+        console.error("Fetch error:", error.message);
+        // Handle other potential errors, like network issues
+        // Revert the task's status in such cases
+        setTasks(prevTasks => {
+            return prevTasks.map(task => {
+                if (task.taskID === taskID) {
+                    return { ...task, status: taskToUpdate.status };
+                }
+                return task;
+            });
+        });
+    });
   };
+
 
   const deleteTask = (taskID) => {
     fetch(`https://u5iwo7ria4.execute-api.us-east-1.amazonaws.com/version2/task/${taskID}`, {
@@ -106,31 +129,32 @@ function App() {
 
   return (
     <div className="App">
-      <h1>Task Manager</h1>
-      <div>
-        <input
-          type="text"
-          value={newTask}
-          onChange={e => setNewTask(e.target.value)}
-          placeholder="Enter new task"
-        />
-        <button onClick={addTask}>Add Task</button>
-      </div>
-      <ul>
-        {tasks.map(task => (
-          <li key={task.taskID} style={{ textDecoration: task.status === 'Completed' ? 'line-through' : 'none' }}>
+    <h1>Task Manager</h1>
+    <div className="input-container">
+      <input
+        type="text"
+        value={newTask}
+        onChange={e => setNewTask(e.target.value)}
+        placeholder="Enter new task"
+      />
+      <button onClick={addTask}>Add Task</button>
+    </div>
+    <ul>
+      {tasks.map(task => (
+        <li key={task.taskID}>
+          <div style={{ textDecoration: task.status === 'Completed' ? 'line-through' : 'none' }}>
             <input
               type="checkbox"
               checked={task.status === 'Completed'}
               onChange={() => toggleTaskCompletion(task.taskID)}
             />
             {task.taskName}
-            <button onClick={() => deleteTask(task.taskID)}>Delete</button>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
+          </div>
+          <button onClick={() => deleteTask(task.taskID)}>Delete</button>
+        </li>
+      ))}
+    </ul>
+  </div>
+  )};
 
 export default App;
