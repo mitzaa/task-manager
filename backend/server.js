@@ -10,7 +10,7 @@ app.use(bodyParser.json());
 
 // Initialize AWS SDK and DynamoDB
 AWS.config.update({ region: 'us-east-1' });
-const dynamodb = new AWS.DynamoDB.DocumentClient();
+// const dynamodb = new AWS.DynamoDB.DocumentClient();
 
 
 // Add a new task
@@ -26,17 +26,10 @@ app.post('/tasks', (req, res) => {
             taskDescription,
             status
         }
-    };
+    }
 
-    dynamodb.put(params, (err, data) => {
-        if (err) {
-            console.error("Error adding task to DynamoDB:", err);
-            res.status(500).json({ error: 'Unable to add task', details: err });
-        } else {
-            res.json({ success: true, message: 'Task added successfully' });
-        }
-    });
 });
+
 
 app.patch('/tasks/:taskId', (req, res) => {
     const { taskId } = req.params;
@@ -53,18 +46,6 @@ app.patch('/tasks/:taskId', (req, res) => {
 });
 
 
-function updateTaskInDynamoDB(taskId, status, callback) {
-    const params = {
-        TableName: 'TaskManagerTasks',  
-        Key: { 'taskID': taskId },
-        UpdateExpression: 'set #s = :status',
-        ExpressionAttributeNames: { '#s': 'status' },
-        ExpressionAttributeValues: { ':status': status }
-    };
-
-    dynamodb.update(params, callback);
-}
-
 app.delete('/tasks/:taskId', (req, res) => {
     const { taskId } = req.params;
   
@@ -76,22 +57,10 @@ app.delete('/tasks/:taskId', (req, res) => {
         res.json({ success: true });
       }
     });
-  });
-
-  
-  function deleteTaskFromDynamoDB(taskId, callback) {
-    const params = {
-      TableName: 'TaskManagerTasks',  
-      Key: { 'taskID': taskId }
-    };
-  
-    dynamodb.delete(params, callback);
-  }
-  
-
+});
 
 
 app.listen(3001, () => {
     console.log('Server running on http://localhost:3001');
-});
 
+});

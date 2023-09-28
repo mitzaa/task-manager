@@ -5,3 +5,5 @@ backend/node_modules/
 
 .DS_Store
 .env
+
+/node_modules

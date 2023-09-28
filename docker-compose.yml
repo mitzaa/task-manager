@@ -2,14 +2,22 @@ version: '3'
 
 services:
   frontend:
-    image: task-management-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
+
   backend:
-    image: task-management-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
       - "3001:3001"
     environment:
       - AWS_ACCESS_KEY_ID=${aws_access_key_id}
       - AWS_SECRET_ACCESS_KEY=${aws_secret_access_key}
+      - AWS_SESSION_TOKEN=${aws_session_token}
+      - AWS_DEFAULT_REGION=${aws_default_region}
+
 

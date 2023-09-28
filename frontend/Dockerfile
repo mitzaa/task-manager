@@ -7,10 +7,12 @@ WORKDIR /app
 # Copy package.json and package-lock.json to the container
 COPY package*.json ./
 
-COPY ~/.aws/ /root/.aws/
+# COPY ~/.aws/ /root/.aws/
 
 # Install the React app dependencies
 RUN npm install
+
+RUN apt-get update && apt-get install -y curl unzip
 
 # Copy the React app files to the container
 COPY . .

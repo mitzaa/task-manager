@@ -1,9 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState('');
+
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const response = await fetch('https://u5iwo7ria4.execute-api.us-east-1.amazonaws.com/version2/task', {
+          method: 'GET',
+          mode: 'cors',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const data = await response.json();
+        setTasks(data);
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+      }
+    };
+
+    fetchTasks();
+  }, []);
 
   const addTask = () => {
     if (newTask.trim() !== '') {
@@ -14,17 +34,19 @@ function App() {
         status: 'Pending'
       };
 
-      fetch('http://localhost:3001/tasks', {
+      fetch('https://u5iwo7ria4.execute-api.us-east-1.amazonaws.com/version2/task', {
         method: 'POST',
+        mode: 'cors',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(task)
       })
         .then(response => response.json())
         .then(data => {
-          if (data.success) {
+          console.log('API Response:', data);
+          if (data.message === 'Item created successfully') {
             setTasks(prevTasks => [...prevTasks, task]);
           } else {
-            console.error('Failed to add task:', data.error);
+            console.error('Failed to add task:', data.message);
           }
         })
         .catch(error => {
@@ -35,55 +57,52 @@ function App() {
     }
   };
 
-  const removeTask = (taskId) => {
-    setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
-  };
-
-  const toggleTaskCompletion = (taskId) => {
-    const taskToUpdate = tasks.find(task => task.taskID === taskId);
+  const toggleTaskCompletion = (taskID) => {
+    const taskToUpdate = tasks.find(task => task.taskID === taskID);
     if (!taskToUpdate) return;
-  
+
     const updatedStatus = taskToUpdate.status === 'Pending' ? 'Completed' : 'Pending';
-  
-    fetch(`http://localhost:3001/tasks/${taskId}`, { 
-      method: 'PATCH', 
+
+    fetch(`https://u5iwo7ria4.execute-api.us-east-1.amazonaws.com/version2/task/${taskID}`, {
+      method: 'PUT',
+      mode: 'cors',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ status: updatedStatus })
     })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        setTasks(prevTasks => prevTasks.map(task => {
-          if (task.taskID === taskId) {
-            return { ...task, status: updatedStatus };
-          }
-          return task;
-        }));
-      }
-    });
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          setTasks(prevTasks => {
+            console.log("Updating task status in state for taskID:", taskID);
+            return prevTasks.map(task => {
+              if (task.taskID === taskID) {
+                console.log("Found matching task. Setting status to:", updatedStatus);
+                return { ...task, status: updatedStatus };
+              }
+              return task;
+            });
+          });
+        }
+      });
   };
 
-  const deleteTask = (taskId) => {
-    fetch(`http://localhost:3001/tasks/${taskId}`, {
+  const deleteTask = (taskID) => {
+    fetch(`https://u5iwo7ria4.execute-api.us-east-1.amazonaws.com/version2/task/${taskID}`, {
       method: 'DELETE'
     })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        // Update the local state to reflect the deletion
-        setTasks(prevTasks => prevTasks.filter(task => task.taskID !== taskId));
-      } else {
-        console.error("Error deleting task:", data.error);
-      }
-    })
-    .catch(error => {
-      console.error("Fetch error:", error.message);
-    });
+      .then(response => {
+        if (response.status === 204) {
+          setTasks(prevTasks => prevTasks.filter(task => task.taskID !== taskID));
+        } else {
+          console.error("Error deleting task. HTTP status code:", response.status);
+        }
+      })
+      .catch(error => {
+        console.error("Fetch error:", error.message);
+      });
   };
-  
-
 
   return (
     <div className="App">
@@ -115,4 +134,3 @@ function App() {
 }
 
 export default App;
-
