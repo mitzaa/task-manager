@@ -1,66 +1,71 @@
 const express = require('express');
+const fetch = require('node-fetch');
 const cors = require('cors');
-const AWS = require('aws-sdk');
-const bodyParser = require('body-parser');
-
-
 const app = express();
+
 app.use(cors());
-app.use(bodyParser.json());
 
-// Initialize AWS SDK and DynamoDB
-AWS.config.update({ region: 'us-east-1' });
-// const dynamodb = new AWS.DynamoDB.DocumentClient();
+app.use(express.json());
 
-
-// Add a new task
-app.post('/tasks', (req, res) => {
-    const { taskID, taskName, taskDescription, status } = req.body;
-    console.log("Received request to add task:", req.body);
-
-    const params = {
-        TableName: 'TaskManagerTasks',
-        Item: {
-            taskID,
-            taskName,
-            taskDescription,
-            status
-        }
+app.get('/tasks', async (req, res) => {
+    try {
+        let response = await fetch('https://u5iwo7ria4.execute-api.us-east-1.amazonaws.com/version2/task');
+        let data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error("Error fetching tasks:", error);
+        res.status(500).send("Internal Server Error");
     }
-
 });
 
+app.post('/tasks', async (req, res) => {
+    try {
+        let response = await fetch('https://u5iwo7ria4.execute-api.us-east-1.amazonaws.com/version2/task', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(req.body)
+        });
+        let data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error("Error adding task:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
 
-app.patch('/tasks/:taskId', (req, res) => {
-    const { taskId } = req.params;
-    const { status } = req.body;
+app.put('/tasks/:taskId', async (req, res) => {
+    try {
+        let response = await fetch(`https://u5iwo7ria4.execute-api.us-east-1.amazonaws.com/version2/task/${req.params.taskId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(req.body)
+        });
+        let data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error("Error updating task:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
 
-    updateTaskInDynamoDB(taskId, status, (err, data) => {
-        if (err) {
-            console.error("Error updating task in DynamoDB:", err);
-            res.status(500).json({ success: false, error: 'Unable to update task' });
+app.delete('/tasks/:taskId', async (req, res) => {
+    try {
+        let response = await fetch(`https://u5iwo7ria4.execute-api.us-east-1.amazonaws.com/version2/task/${req.params.taskId}`, {
+            method: 'DELETE'
+        });
+        if (response.status === 204) {
+            res.status(204).send();
         } else {
-            res.json({ success: true });
+            let data = await response.json();
+            res.json(data);
         }
-    });
+    } catch (error) {
+        console.error("Error deleting task:", error);
+        res.status(500).send("Internal Server Error");
+    }
 });
 
-
-app.delete('/tasks/:taskId', (req, res) => {
-    const { taskId } = req.params;
-  
-    deleteTaskFromDynamoDB(taskId, (err, data) => {
-      if (err) {
-        console.error("Error deleting task from DynamoDB:", err);
-        res.status(500).json({ success: false, error: 'Unable to delete task' });
-      } else {
-        res.json({ success: true });
-      }
-    });
-});
-
-
-app.listen(3001, () => {
-    console.log('Server running on http://localhost:3001');
-
+const PORT = 3001;
+app.listen(PORT, () => {
+    console.log(`Server started on port ${PORT}`);
 });

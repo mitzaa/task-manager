@@ -5,11 +5,10 @@ function App() {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState('');
 
-
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const response = await fetch('https://u5iwo7ria4.execute-api.us-east-1.amazonaws.com/version2/task', {
+        const response = await fetch('http://localhost:3001/tasks', {
           method: 'GET',
           mode: 'cors',
           headers: { 'Content-Type': 'application/json' }
@@ -34,7 +33,7 @@ function App() {
         status: 'Pending'
       };
 
-      fetch('https://u5iwo7ria4.execute-api.us-east-1.amazonaws.com/version2/task', {
+      fetch('http://localhost:3001/tasks', {
         method: 'POST',
         mode: 'cors',
         headers: { 'Content-Type': 'application/json' },
@@ -63,7 +62,6 @@ function App() {
 
     const updatedStatus = taskToUpdate.status === 'Pending' ? 'Completed' : 'Pending';
 
-    
     setTasks(prevTasks => {
         return prevTasks.map(task => {
             if (task.taskID === taskID) {
@@ -73,7 +71,7 @@ function App() {
         });
     });
 
-    fetch(`https://u5iwo7ria4.execute-api.us-east-1.amazonaws.com/version2/task/${taskID}`, {
+    fetch(`http://localhost:3001/tasks/${taskID}`, {
         method: 'PUT',
         mode: 'cors',
         headers: {
@@ -108,53 +106,51 @@ function App() {
             });
         });
     });
-  };
+};
 
-
-  const deleteTask = (taskID) => {
-    fetch(`https://u5iwo7ria4.execute-api.us-east-1.amazonaws.com/version2/task/${taskID}`, {
-      method: 'DELETE'
-    })
-      .then(response => {
-        if (response.status === 204) {
+const deleteTask = (taskID) => {
+  fetch(`http://localhost:3001/tasks/${taskID}`, {
+    method: 'DELETE'
+  })
+  .then(response => {
+      if (response.status === 204) {
           setTasks(prevTasks => prevTasks.filter(task => task.taskID !== taskID));
-        } else {
-          console.error("Error deleting task. HTTP status code:", response.status);
-        }
-      })
-      .catch(error => {
-        console.error("Fetch error:", error.message);
-      });
-  };
+      }
+  })
+  .catch(error => {
+      console.error("Fetch error:", error.message);
+  });
+};
 
-  return (
-    <div className="App">
-    <h1>Task Manager</h1>
-    <div className="input-container">
-      <input
-        type="text"
-        value={newTask}
-        onChange={e => setNewTask(e.target.value)}
-        placeholder="Enter new task"
-      />
-      <button onClick={addTask}>Add Task</button>
+return (
+
+      <div className="App">
+      <h1>Task Manager</h1>
+      <div className="input-container">
+        <input
+          type="text"
+          value={newTask}
+          onChange={e => setNewTask(e.target.value)}
+          placeholder="Enter new task"
+        />
+        <button onClick={addTask}>Add Task</button>
+      </div>
+      <ul>
+        {tasks.map(task => (
+          <li key={task.taskID}>
+            <div style={{ textDecoration: task.status === 'Completed' ? 'line-through' : 'none' }}>
+              <input
+                type="checkbox"
+                checked={task.status === 'Completed'}
+                onChange={() => toggleTaskCompletion(task.taskID)}
+              />
+              {task.taskName}
+            </div>
+            <button onClick={() => deleteTask(task.taskID)}>Delete</button>
+          </li>
+        ))}
+      </ul>
     </div>
-    <ul>
-      {tasks.map(task => (
-        <li key={task.taskID}>
-          <div style={{ textDecoration: task.status === 'Completed' ? 'line-through' : 'none' }}>
-            <input
-              type="checkbox"
-              checked={task.status === 'Completed'}
-              onChange={() => toggleTaskCompletion(task.taskID)}
-            />
-            {task.taskName}
-          </div>
-          <button onClick={() => deleteTask(task.taskID)}>Delete</button>
-        </li>
-      ))}
-    </ul>
-  </div>
-  )};
-
-export default App;
+    )};
+  
+  export default App;
