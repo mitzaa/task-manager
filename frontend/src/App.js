@@ -114,13 +114,19 @@ const deleteTask = (taskID) => {
   })
   .then(response => {
       if (response.status === 204) {
+          console.log('Item deleted successfully'); // Log the success message
           setTasks(prevTasks => prevTasks.filter(task => task.taskID !== taskID));
+      } else {
+          return response.json().then(data => {
+              console.error('Failed to delete task:', data.message);
+          });
       }
   })
   .catch(error => {
       console.error("Fetch error:", error.message);
   });
 };
+
 
 return (
 
@@ -136,7 +142,7 @@ return (
         <button onClick={addTask}>Add Task</button>
       </div>
       <ul>
-        {tasks.map(task => (
+      {tasks.sort((a, b) => (a.status === 'Completed' ? 1 : -1)).map(task => (
           <li key={task.taskID}>
             <div style={{ textDecoration: task.status === 'Completed' ? 'line-through' : 'none' }}>
               <input
