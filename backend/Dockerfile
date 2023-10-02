@@ -2,6 +2,10 @@
 # Use an official Node runtime as the parent image
 FROM node:14
 
+
+ENTRYPOINT []
+
+
 RUN apt-get update && apt-get install -y curl unzip && \
     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
     unzip awscliv2.zip && \
