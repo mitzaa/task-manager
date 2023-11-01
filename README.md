@@ -1,4 +1,4 @@
-NOTE: AWS credits ran out so dynamoDB access no longer works ):
+NOTE: AWS credits ran out so dynamoDB access no longer works, hence the error 500 status ):
 
 
 # Task Manager Application
