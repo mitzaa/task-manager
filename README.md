@@ -1,3 +1,6 @@
+NOTE: AWS credits ran out so dynamoDB access no longer works ):
+
+
 # Task Manager Application
 
 Task Manager is a virtualized application which provides a simple interface for managing tasks or to-do lists. It uses a React frontend, a Node.js backend, and leverages AWS services for storage and execution.
